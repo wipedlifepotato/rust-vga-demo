@@ -52,6 +52,22 @@ const COLORS: [Color; 16] = [
 fn make_vga_byte(fg: Color, bg: Color) -> u8 {
     ((bg as u8) << 4) | (fg as u8)
 }
+fn rdtsc() -> u32 {
+    let lo: u32;
+    let hi: u32;
+    unsafe {
+        core::arch::asm!(
+            "rdtsc",
+            out("eax") lo,
+            out("edx") hi
+        );
+    }
+    lo ^ hi
+}
+
+fn init_seed() {
+    unsafe { SEED = rdtsc(); }
+}
 fn rand() -> u32 {
     unsafe {
         SEED = SEED.wrapping_mul(1664525).wrapping_add(1013904223);
@@ -72,8 +88,10 @@ fn delay(count: u32) {
 pub extern "C" fn _start() -> ! {
     let vga_buffer = 0xb8000 as *mut u8;
     let mut position:isize = 0;
+
     loop {
     	unsafe {
+    		init_seed();
     		let index = (rand() % 128) as usize;
     		*vga_buffer.offset(position%2000 as isize * 2) = TABLE[index];
     		let fg = rand_color();
@@ -82,6 +100,7 @@ pub extern "C" fn _start() -> ! {
     		*vga_buffer.offset(position%2000 as isize *2 + 1)=color;
     		position+=1;
     		delay(1024);
+
     	}
     }
 
