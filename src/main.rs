@@ -99,7 +99,7 @@ pub extern "C" fn _start() -> ! {
 		let color = make_vga_byte(fg, bg);
     		*vga_buffer.offset(position%2000 as isize *2 + 1)=color;
     		position+=1;
-    		delay(1024);
+    		delay(60000);
 
     	}
     }
